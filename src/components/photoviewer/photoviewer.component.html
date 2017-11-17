@@ -1,0 +1,6 @@
+<ng-template #photoviewer>
+    <div id="container" *ngIf="show" (click)="show=false" (swipe)="nextImage($event)">
+        <div id="label" *ngIf="label">{{ label }}</div>
+        <img [src]="src" [class]="imgClass" />
+    </div>
+</ng-template>

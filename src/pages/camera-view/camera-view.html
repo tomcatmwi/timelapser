@@ -1,0 +1,31 @@
+<ion-content class="background-color-transparent" padding id="page2">
+
+    <ion-card id="floater" [@floaterState]="floaterState" (swipe)="hidePanel($event)">
+        <ion-item>
+            <ion-label>
+                Camera active
+            </ion-label>
+            <ion-toggle color="danger" [(ngModel)]="storageService.storage['cameraActive']" (ionChange)="activateCamera($event.value)"></ion-toggle>
+        </ion-item>
+
+        <button 
+            [disabled]="noPhoto"
+            ion-button
+            color="positive"
+            block
+            (click)="takePhoto()">
+            <ion-icon name="time" *ngIf="noPhoto"></ion-icon>
+            <ion-icon name="camera" *ngIf="!noPhoto"></ion-icon>
+        </button>
+
+        <div id="infostuff">
+            Images taken: <b>{{ imagesTaken }}</b><br />
+            Last take: <b>{{ lastTake }}</b><br />
+            Next take: <b>{{ nextTake() }}</b><br />
+            Interval: <b>{{ getInterval() }}</b><br />
+            Free space: <b>{{ freeSpace | filesize }}</b><br />
+        </div>
+    </ion-card>
+
+
+</ion-content>

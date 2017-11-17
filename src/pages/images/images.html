@@ -1,0 +1,32 @@
+<ion-content padding id="page3" overflow-scroll="true">
+
+    <photoviewer #photoViewer (getNextImage)="getNextImage($event)"></photoviewer>
+
+    <ion-card>
+        <ion-card-content>
+            {{ album?.length }} images
+        </ion-card-content>
+    </ion-card>
+
+    <ion-list>
+        <ion-item *ngFor="let image of album; let i=index"
+                  (click)="photoViewer.showPicture(image.nativeURL, image.name);">
+            <p>
+                <b>{{ image.name }}</b><br />
+                {{ image.size | filesize }}<br />
+                {{ image.modificationTime }}<br />
+            </p>
+            <ion-icon name="close" item-right (click)="deleteImage($event, i)"></ion-icon>
+        </ion-item>
+    </ion-list>
+
+    <ion-card>
+        <ion-card-content>
+            <button id="images-button4" ion-button color="assertive" block icon-left (click)="deleteAllImages()">
+                    <ion-icon name="trash" (click)="deleteAllImages()"></ion-icon>
+                Delete all images
+            </button>
+        </ion-card-content>
+    </ion-card>
+
+</ion-content>

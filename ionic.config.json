@@ -1,0 +1,8 @@
+{
+  "name": "timelapser2",
+  "app_id": "469fb19c",
+  "type": "ionic-angular",
+  "integrations": {
+    "cordova": {}
+  }
+}

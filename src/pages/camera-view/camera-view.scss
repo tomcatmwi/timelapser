@@ -1,0 +1,31 @@
+page-camera-view {
+    background-color: transparent;
+}
+
+.camera-preview {
+    display: block;
+    width: 75vh;
+    max-width: 75vh;
+    min-width: 75vh;
+    height: 60vh;
+    max-height: 60vh;
+    min-height: 60vh;
+    padding: 1em;
+    margins: 0 0 1em 0;
+    background-color: transparent;
+    border: 1px solid #DADADA;
+    
+}
+
+#infostuff {
+    padding: 0.8em;
+    font-size: 0.8em;
+}
+
+#floater {
+    width: 250px;
+    height: auto;
+    position: absolute;
+    top: 10px;
+    left: 20px;
+}
