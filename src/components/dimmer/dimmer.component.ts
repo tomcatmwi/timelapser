@@ -1,4 +1,4 @@
-import { Component, ViewContainerRef, ViewChild, AfterViewInit, Input } from '@angular/core';
+import { Component, ViewContainerRef, ViewChild, AfterViewInit, Input, NgZone } from '@angular/core';
 
 //  Turn on enableProdMode() in main.ts to use this component!
 
@@ -12,20 +12,20 @@ export class DimmerComponent implements AfterViewInit {
     @ViewChild('dimmer') dimmer;
     
     @Input() set show(show) {
-        this._show = show;
         this.tabBarElement = document.querySelector('#mainTabs-tabs1 .tabbar');
+        console.log(this.tabBarElement);
 
-        if (show)
+        if (show) 
             this.tabBarElement.style.display = 'none'
         else
             this.tabBarElement.style.display = 'flex';
-            
-//        this.dimmer.nativeElement.className = '';
-//        this.dimmer.nativeElement.className = 'dimmer';
+        
+        this._show = show;
     }
     
     constructor(
-        private _dimmer: ViewContainerRef
+        private _dimmer: ViewContainerRef,
+        private zone: NgZone
     ) {}
     
     tabBarElement;

@@ -47,6 +47,7 @@ export class CameraViewPage {
     lastTake = 'None';
     freeSpace;
     cameraTimer;
+    tabBarElement;
 
     imageOptions: CameraPreviewPictureOptions;
 
@@ -343,16 +344,19 @@ export class CameraViewPage {
             alert.present();
         }
         
-        if (value)
+        this.tabBarElement = document.querySelector('#mainTabs-tabs1 .tabbar');
+        
+        if (value) {
             this.insomnia.keepAwake().then(
                 () => this.storageService.setValue('cameraActive', true),
                 error => console.log('Unable to turn on Insomnia: ', error)
             )
-        else
+        } else {
             this.insomnia.allowSleepAgain().then(
                 () => this.storageService.setValue('cameraActive', false),
                 error => console.log('Unable to turn off Insomnia: ', error)
             );
+        }
     }
 
     getInterval() {

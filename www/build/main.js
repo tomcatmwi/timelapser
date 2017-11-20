@@ -544,10 +544,13 @@ var CameraViewPage = (function () {
             });
             alert_2.present();
         }
-        if (value)
+        this.tabBarElement = document.querySelector('#mainTabs-tabs1 .tabbar');
+        if (value) {
             this.insomnia.keepAwake().then(function () { return _this.storageService.setValue('cameraActive', true); }, function (error) { return console.log('Unable to turn on Insomnia: ', error); });
-        else
+        }
+        else {
             this.insomnia.allowSleepAgain().then(function () { return _this.storageService.setValue('cameraActive', false); }, function (error) { return console.log('Unable to turn off Insomnia: ', error); });
+        }
     };
     CameraViewPage.prototype.getInterval = function () {
         if (this.storageService.storage['photoIntervalText'])
@@ -1379,19 +1382,22 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 //  Turn on enableProdMode() in main.ts to use this component!
 var DimmerComponent = (function () {
-    function DimmerComponent(_dimmer) {
+    function DimmerComponent(_dimmer, zone) {
         this._dimmer = _dimmer;
+        this.zone = zone;
     }
     Object.defineProperty(DimmerComponent.prototype, "show", {
         set: function (show) {
-            this._show = show;
+            var _this = this;
             this.tabBarElement = document.querySelector('#mainTabs-tabs1 .tabbar');
+            console.log(this.tabBarElement);
             if (show)
                 this.tabBarElement.style.display = 'none';
             else
                 this.tabBarElement.style.display = 'flex';
-            this.dimmer.nativeElement.className = '';
-            this.dimmer.nativeElement.className = 'dimmer';
+            this.zone.run(function () {
+                _this._show = show;
+            });
         },
         enumerable: true,
         configurable: true
@@ -1410,11 +1416,12 @@ var DimmerComponent = (function () {
     ], DimmerComponent.prototype, "show", null);
     DimmerComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
-            selector: 'dimmer',template:/*ion-inline-start:"f:\Cordova\timelapser\src\components\dimmer\dimmer.component.html"*/'<ng-template #dimmer>\n    <div id="dimmer-div" *ngIf="_show" (click)="_show=false">\n    </div>\n</ng-template>'/*ion-inline-end:"f:\Cordova\timelapser\src\components\dimmer\dimmer.component.html"*/,
+            selector: 'dimmer',template:/*ion-inline-start:"f:\Cordova\timelapser\src\components\dimmer\dimmer.component.html"*/'<ng-template #dimmer>\n    <div id="dimmer-div" class="dimmer" *ngIf="_show" (click)="_show=false">\n    </div>\n</ng-template>'/*ion-inline-end:"f:\Cordova\timelapser\src\components\dimmer\dimmer.component.html"*/,
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_0__angular_core__["_10" /* ViewContainerRef */]])
+        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["_10" /* ViewContainerRef */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["_10" /* ViewContainerRef */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* NgZone */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* NgZone */]) === "function" && _b || Object])
     ], DimmerComponent);
     return DimmerComponent;
+    var _a, _b;
 }());
 
 //# sourceMappingURL=dimmer.component.js.map
