@@ -3,6 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" 
+              viewport-fit="cover"
               content="width=device-width,
                        initial-scale=1.0,
                        minimum-scale=1.0,
@@ -30,12 +31,40 @@
         </script>-->
 
         <link href="build/main.css" rel="stylesheet">
+        
+        <style>
+            .loader {
+                width: 100vw;
+                min-width: 100vw;
+                max-width: 100vw;
+                height: 100vh;
+                min-height: 100vh;
+                max-height: 100vh;
+                display: flex;
+                text-align: center;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                align-content: center;
+                color: #151515;
+                font-size: 2em;
+            }
+            
+        </style>
 
     </head>
     <body>
 
         <!-- Ionic's root component and where the app will load -->
-    <ion-app></ion-app>
+    <ion-app>
+        
+        <div class="loader" id="index-loader">
+            <div>
+                Please wait...
+            </div>
+        </div>
+        
+    </ion-app>
 
     <!-- The polyfills js is generated during the build process -->
     <script src="build/polyfills.js"></script>

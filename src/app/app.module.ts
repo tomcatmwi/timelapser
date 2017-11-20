@@ -8,18 +8,23 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {LoadingController} from 'ionic-angular';
 import {File} from '@ionic-native/file';
 import {Content} from 'ionic-angular';
+import {NativeAudio} from '@ionic-native/native-audio';
+import {Insomnia} from '@ionic-native/insomnia';
 
 import {CameraViewPage} from '../pages/camera-view/camera-view';
 import {ImagesPage} from '../pages/images/images';
 import {SettingsPage} from '../pages/settings/settings';
 import {MainTabsPage} from '../pages/main-tabs/main-tabs';
 
+import {PhotoViewerComponent} from '../components/photoviewer/photoviewer.component';
+import {DimmerComponent} from '../components/dimmer/dimmer.component';
+
 import {StatusBar} from '@ionic-native/status-bar';
 import {SplashScreen} from '@ionic-native/splash-screen';
 import {StorageService} from '../services/storage.service';
 import {FileSystemService} from '../services/filesystem.service';
 import {FormatterService} from '../services/formatter.service';
-import {PhotoViewerComponent} from '../components/photoviewer/photoviewer.component';
+import {AudioService} from '../services/audio.service';
 
 import {FormatNumberPipe, FormatSecondsPipe, ChopStringPipe, FilesizePipe} from '../pipes/formatter.pipe';
 
@@ -31,6 +36,7 @@ import {FormatNumberPipe, FormatSecondsPipe, ChopStringPipe, FilesizePipe} from 
         SettingsPage,
         MainTabsPage,
         PhotoViewerComponent,
+        DimmerComponent,
         FormatNumberPipe,
         FormatSecondsPipe,
         ChopStringPipe,
@@ -55,11 +61,14 @@ import {FormatNumberPipe, FormatSecondsPipe, ChopStringPipe, FilesizePipe} from 
         StorageService,
         FormatterService,
         FileSystemService,
+        AudioService,
         CameraPreview,
         ScreenOrientation,
         LoadingController,
         File,
         Content,
+        Insomnia,
+        NativeAudio,
         {provide: ErrorHandler, useClass: IonicErrorHandler}
     ]
 })

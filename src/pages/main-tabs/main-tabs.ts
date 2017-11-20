@@ -21,7 +21,4 @@ export class MainTabsPage {
         public navCtrl: NavController) {
     }
     
-    lofasz(event) {
-        console.log(event);
-    }
 }

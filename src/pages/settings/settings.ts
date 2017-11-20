@@ -2,7 +2,7 @@ import {Component} from '@angular/core';
 import {NavController} from 'ionic-angular';
 import {AlertController} from 'ionic-angular';
 import {StorageService} from '../../services/storage.service';
-import { ActionSheetController } from 'ionic-angular';
+import {ActionSheetController} from 'ionic-angular';
 
 @Component({
     selector: 'page-settings',
@@ -42,12 +42,27 @@ export class SettingsPage {
         {type: 'radio', label: '3 hours', value: '10800'},
         {type: 'radio', label: '6 hours', value: '21600'}
     ];
+    soundOptions = [
+                        {type: 'radio', label: 'No sound', value: ''},
+                        {type: 'radio', label: 'Camera shutter', value: 'shutter.wav'},
+                        {type: 'radio', label: 'Beep', value: 'beep.wav'}
+                    ];
+                    
+    currentSound = 'No sound';
+    soundObservable;
     
     ionViewWillEnter() {
+        
+        //  set photo intervals
         if (!this.storageService.getValue('photoInterval')) {
             this.storageService.setValue('photoInterval', Number(this.photoIntervals[0].value));        
             this.storageService.setValue('photoIntervalText', this.photoIntervals[0].label);
         }
+        
+        //  set shutter sound - not currently used
+        if (!localStorage.getItem('playSound'))
+            localStorage.setItem('playSound', 'No sound');
+        this.currentSound = localStorage.getItem('playSoundLabel');
     }
 
     deleteTime(i) {
@@ -127,5 +142,110 @@ export class SettingsPage {
         });
         intervalSelector.present();
     }
+
+    setSound() {
+        
+        let intervalSelector = this.alertCtrl.create({
+            title: 'Set sound',
+            inputs: this.soundOptions,
+            buttons: [
+                {
+                    text: 'Cancel',
+                    role: 'cancel',
+                    handler: data => {}
+                },
+                {
+                    text: 'Set',
+                    handler: data => {
+                        localStorage.setItem('playSound', data);
+                        for (let t in this.soundOptions)
+                            if (this.soundOptions[t].value == data)
+                                localStorage.setItem('playSoundLabel', this.soundOptions[t].label);
+                        this.currentSound = localStorage.getItem('playSoundLabel');
+                    }
+                }
+            ]
+        });
+        intervalSelector.present();
+    }
+
+    setValue(label, title) {
+        let selector = this.alertCtrl.create({
+            title: title,
+            inputs: this.storageService.storage.cameraOptions[label],
+            buttons: [
+                {
+                    text: 'Cancel',
+                    role: 'cancel',
+                    handler: data => {}
+                },
+                {
+                    text: 'Set',
+                    handler: data => {
+                        for (let t in this.storageService.storage.cameraOptions[label]) {
+                            if (this.storageService.storage.cameraOptions[label][t].value == data)
+                                this.storageService.storage.cameraSettings[label] = {
+                                    'label': this.storageService.storage.cameraOptions[label][t].label,
+                                    'value': data
+                                }
+                        }
+                    }
+                }
+            ]
+        });
+        selector.present();
+                
+    }    
+
+    setResolution() {
+        let selector = this.alertCtrl.create({
+            title: 'Set JPG resolution',
+            inputs: this.storageService.storage.cameraOptions['resolution'],
+            buttons: [
+                {
+                    text: 'Cancel',
+                    role: 'cancel',
+                    handler: data => {}
+                },
+                {
+                    text: 'Set',
+                    handler: data => {
+                        this.storageService.storage.cameraSettings.resolution = data;
+                    }
+                }
+            ]
+        });
+        selector.present();
+                
+    }    
+
+    setImageQuality() {
+        let selector = this.alertCtrl.create({
+            title: 'Set JPG quality',
+            inputs: [
+                {
+                    name: 'quality',
+                    type: 'number',
+                    value: String(this.storageService.storage.cameraSettings.quality) 
+                }
+            ],
+            
+            buttons: [
+                {
+                    text: 'Cancel',
+                    role: 'cancel',
+                    handler: data => {}
+                },
+                {
+                    text: 'Set',
+                    handler: data => {
+                        this.storageService.storage.cameraSettings.quality = Number(data);
+                    }
+                }
+            ]
+        });
+        selector.present();
+                
+    }    
 
 }

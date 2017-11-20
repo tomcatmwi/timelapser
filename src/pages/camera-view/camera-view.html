@@ -1,4 +1,5 @@
 <ion-content class="background-color-transparent" padding id="page2">
+    <dimmer [show]="storageService.storage['cameraActive'] && storageService.storage['dimCamera']"></dimmer>
 
     <ion-card id="floater" [@floaterState]="floaterState" (swipe)="hidePanel($event)">
         <ion-item>

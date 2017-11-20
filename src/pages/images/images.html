@@ -2,9 +2,13 @@
 
     <photoviewer #photoViewer (getNextImage)="getNextImage($event)"></photoviewer>
 
-    <ion-card>
+
+    <ion-card *ngIf="album.length > 0">
         <ion-card-content>
-            {{ album?.length }} images
+            <button id="images-button4" ion-button color="assertive" block icon-left (click)="deleteAllImages()">
+                    <ion-icon name="trash" (click)="deleteAllImages()"></ion-icon>
+                Delete all images
+            </button>
         </ion-card-content>
     </ion-card>
 
@@ -19,14 +23,14 @@
             <ion-icon name="close" item-right (click)="deleteImage($event, i)"></ion-icon>
         </ion-item>
     </ion-list>
-
+    
     <ion-card>
-        <ion-card-content>
-            <button id="images-button4" ion-button color="assertive" block icon-left (click)="deleteAllImages()">
-                    <ion-icon name="trash" (click)="deleteAllImages()"></ion-icon>
-                Delete all images
-            </button>
+        <ion-card-content center *ngIf="album.length > 0">
+            Total: {{ album?.length }} images
+        </ion-card-content>
+        <ion-card-content center *ngIf="album.length <= 0">
+            No images
         </ion-card-content>
     </ion-card>
-
+    
 </ion-content>

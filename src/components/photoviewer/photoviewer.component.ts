@@ -1,4 +1,4 @@
-import { Component, ViewContainerRef, ViewChild, EventEmitter, Output } from '@angular/core';
+import { Component, ViewContainerRef, ViewChild, EventEmitter } from '@angular/core';
 import {ScreenOrientation} from '@ionic-native/screen-orientation';
 
 //  Turn on enableProdMode() in main.ts to use this component!
@@ -8,6 +8,7 @@ import {ScreenOrientation} from '@ionic-native/screen-orientation';
     selector: 'photoviewer',
     templateUrl: './photoviewer.component.html',
     outputs: ['getNextImage']
+    
 })
 
 export class PhotoViewerComponent {
@@ -19,19 +20,24 @@ export class PhotoViewerComponent {
     show = false;
     imgClass = 'img-portrait';
     getNextImage = new EventEmitter;
-    
+    tabBarElement;
+        
     constructor(
         private _photoviewer: ViewContainerRef,
         private screenOrientation: ScreenOrientation) {
     }
     
-    showPicture(src, label) {
+    showPicture(src=null, label='') {
+        this.tabBarElement = document.querySelector('#mainTabs-tabs1 .tabbar');
         if (src) {
             this.src = src;
             this.label = label;
+            this.tabBarElement.style.display = 'none';
             this.show = true;
-        } else
+        } else {
+            this.tabBarElement.style.display = 'flex';
             this.show = false;
+        }
     }
     
     setImageClass() {
@@ -39,6 +45,16 @@ export class PhotoViewerComponent {
             this.imgClass = 'img-portrait'
         else
             this.imgClass = 'img-landscape';
+    }
+    
+    ionViewWillEnter() {
+        console.log('segg');
+        this.tabBarElement.style.display = 'none';
+    }
+    
+    ionViewWillLeave() {
+        console.log('segg');
+        this.tabBarElement.style.display = 'block';
     }
     
     ngAfterViewInit() {

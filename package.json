@@ -20,31 +20,32 @@
     "@angular/http": "4.4.6",
     "@angular/platform-browser": "4.4.6",
     "@angular/platform-browser-dynamic": "4.4.6",
-    "@ionic-native/background-mode": "^4.4.0",
-    "@ionic-native/base64-to-gallery": "^4.3.3",
-    "@ionic-native/camera": "^4.3.3",
-    "@ionic-native/camera-preview": "^4.3.2",
-    "@ionic-native/core": "4.3.2",
-    "@ionic-native/file": "^4.3.3",
-    "@ionic-native/file-transfer": "^4.4.0",
-    "@ionic-native/photo-library": "^4.3.3",
-    "@ionic-native/photo-viewer": "^4.3.3",
-    "@ionic-native/screen-orientation": "^4.3.2",
-    "@ionic-native/splash-screen": "^4.3.2",
-    "@ionic-native/status-bar": "4.3.2",
+    "@ionic-native/background-mode": "4.4.2",
+    "@ionic-native/base64-to-gallery": "4.4.2",
+    "@ionic-native/camera": "^4.4.2",
+    "@ionic-native/camera-preview": "^4.4.2",
+    "@ionic-native/core": "4.4.2",
+    "@ionic-native/file": "^4.4.2",
+    "@ionic-native/file-transfer": "4.4.2",
+    "@ionic-native/insomnia": "^4.4.2",
+    "@ionic-native/native-audio": "^4.4.2",
+    "@ionic-native/photo-library": "4.4.2",
+    "@ionic-native/photo-viewer": "4.4.2",
+    "@ionic-native/screen-orientation": "^4.4.2",
+    "@ionic-native/splash-screen": "4.4.2",
+    "@ionic-native/status-bar": "4.4.2",
     "@ionic/storage": "2.0.1",
     "com-sarriaroman-photoviewer": "^1.1.11",
-    "cordova-android": "~6.3.0",
     "cordova-base64-to-gallery": "^4.1.2",
     "cordova-plugin-background-mode": "^0.7.2",
     "cordova-plugin-camera": "^2.4.1",
     "cordova-plugin-camera-preview": "^0.9.0",
     "cordova-plugin-compat": "^1.2.0",
     "cordova-plugin-device": "^1.1.4",
-    "cordova-plugin-file": "^4.3.3",
     "cordova-plugin-file-transfer": "^1.7.0",
+    "cordova-plugin-insomnia": "^4.3.0",
     "cordova-plugin-ionic-webview": "^1.1.16",
-    "cordova-plugin-photo-library": "^2.1.0",
+    "cordova-plugin-nativeaudio": "^3.0.9",
     "cordova-plugin-screen-orientation": "file:cordova-plugin-screen-orientation-master",
     "cordova-plugin-splashscreen": "^4.0.3",
     "cordova-plugin-statusbar": "^2.2.3",
@@ -60,7 +61,7 @@
     "zone.js": "0.8.18"
   },
   "devDependencies": {
-    "@ionic/app-scripts": "3.0.1",
+    "@ionic/app-scripts": "3.1.2",
     "typescript": "2.5.3"
   },
   "description": "An Ionic project",
@@ -75,17 +76,13 @@
       "cordova-plugin-camera": {},
       "cordova-plugin-camera-preview": {},
       "cordova-plugin-screen-orientation": {},
-      "cordova-plugin-file": {},
       "cordova-base64-to-gallery": {},
-      "cordova-plugin-photo-library": {
-        "PHOTO_LIBRARY_USAGE_DESCRIPTION": "To show image list"
-      },
       "com-sarriaroman-photoviewer": {},
       "cordova-plugin-background-mode": {},
-      "cordova-plugin-file-transfer": {}
+      "cordova-plugin-file-transfer": {},
+      "cordova-plugin-nativeaudio": {},
+      "cordova-plugin-insomnia": {}
     },
-    "platforms": [
-      "android"
-    ]
+    "platforms": []
   }
 }
