@@ -20,7 +20,7 @@ export class DimmerComponent implements AfterViewInit {
         else
             this.tabBarElement.style.display = 'flex';
         
-        this._show = show;
+        setTimeout(()=> { this._show = show }, 1500)
     }
     
     constructor(
