@@ -247,5 +247,30 @@ export class SettingsPage {
         selector.present();
                 
     }    
-
+    
+    setFileNamingConvention() {
+        
+        let selector = this.alertCtrl.create({
+            title: 'File naming',
+            inputs: this.storageService.storage.fileNamingConventions,
+            buttons: [
+                {
+                    text: 'Cancel',
+                    role: 'cancel',
+                    handler: data => {}
+                },
+                {
+                    text: 'Set',
+                    handler: data => {
+                        
+                        for(var t in this.storageService.storage.fileNamingConventions)
+                            if (this.storageService.storage.fileNamingConventions[t].value == data)
+                                this.storageService.storage.fileNamingConvention = this.storageService.storage.fileNamingConventions[t];
+                    }
+                }
+            ]
+        });
+        selector.present();
+    }
+ 
 }

@@ -68,6 +68,14 @@
         </div>
         
     </ion-app>
+    
+    <script type="text/javascript">
+      function handleClientLoad() {
+        console.log('Loading Google API client...');
+        gapi.load('client:auth2', initClient);
+      }
+    </script>
+    
 
     <!-- The polyfills js is generated during the build process -->
     <script src="build/polyfills.js"></script>

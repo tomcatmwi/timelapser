@@ -1,0 +1,19 @@
+{
+     "android": {
+         "debug": {
+             "keystore": "timelapser.keystore",
+             "storePassword": "qwa5ed6",
+             "alias": "timelapser",
+             "password" : "qwa5ed6",
+             "keystoreType": ""
+         },
+         "release": {
+             "keystore": "timelapser.keystore",
+             "storePassword": "qwa5ed6",
+             "alias": "timelapser",
+             "password" : "qwa5ed6",
+             "keystoreType": ""
+         }
+     }
+ }
+ 

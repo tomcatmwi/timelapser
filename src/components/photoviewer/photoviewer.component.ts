@@ -1,4 +1,4 @@
-import { Component, ViewContainerRef, ViewChild, EventEmitter } from '@angular/core';
+import {Component, ViewContainerRef, ViewChild, EventEmitter} from '@angular/core';
 import {ScreenOrientation} from '@ionic-native/screen-orientation';
 
 //  Turn on enableProdMode() in main.ts to use this component!
@@ -7,27 +7,26 @@ import {ScreenOrientation} from '@ionic-native/screen-orientation';
 @Component({
     selector: 'photoviewer',
     templateUrl: './photoviewer.component.html',
-    outputs: ['getNextImage']
-    
+    outputs: ['getNextImage'],
 })
 
 export class PhotoViewerComponent {
-    
+
     @ViewChild('photoviewer') photoViewer;
-    
+
     src;
     label;
     show = false;
     imgClass = 'img-portrait';
     getNextImage = new EventEmitter;
     tabBarElement;
-        
+
     constructor(
         private _photoviewer: ViewContainerRef,
         private screenOrientation: ScreenOrientation) {
     }
-    
-    showPicture(src=null, label='') {
+
+    showPicture(src = null, label = '') {
         this.tabBarElement = document.querySelector('#mainTabs-tabs1 .tabbar');
         if (src) {
             this.src = src;
@@ -39,37 +38,27 @@ export class PhotoViewerComponent {
             this.show = false;
         }
     }
-    
+
     setImageClass() {
         if (this.screenOrientation.type.indexOf('portrait') != -1)
             this.imgClass = 'img-portrait'
         else
             this.imgClass = 'img-landscape';
     }
-    
-    ionViewWillEnter() {
-        console.log('segg');
-        this.tabBarElement.style.display = 'none';
-    }
-    
-    ionViewWillLeave() {
-        console.log('segg');
-        this.tabBarElement.style.display = 'block';
-    }
-    
+
     ngAfterViewInit() {
         this.setImageClass();
         this.screenOrientation.onChange().subscribe(
-           () => { 
-               this.setImageClass();
-           }
+            () => {
+                this.setImageClass();
+            }
         );
-        
+
         this._photoviewer.createEmbeddedView(this.photoViewer);
     }
-    
+
     nextImage(event) {
-        this.getNextImage.emit({ src: this.src, dir: event.direction });
+        this.getNextImage.emit({src: this.src, dir: event.direction});
     }
-   
+
 }

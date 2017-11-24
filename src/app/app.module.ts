@@ -10,6 +10,7 @@ import {File} from '@ionic-native/file';
 import {Content} from 'ionic-angular';
 import {NativeAudio} from '@ionic-native/native-audio';
 import {Insomnia} from '@ionic-native/insomnia';
+import {Diagnostic} from '@ionic-native/diagnostic';
 
 import {CameraViewPage} from '../pages/camera-view/camera-view';
 import {ImagesPage} from '../pages/images/images';
@@ -65,6 +66,7 @@ import {FormatNumberPipe, FormatSecondsPipe, ChopStringPipe, FilesizePipe} from 
         CameraPreview,
         ScreenOrientation,
         LoadingController,
+        Diagnostic,
         File,
         Content,
         Insomnia,

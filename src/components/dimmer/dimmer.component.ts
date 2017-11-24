@@ -1,4 +1,4 @@
-import { Component, ViewContainerRef, ViewChild, AfterViewInit, Input, NgZone } from '@angular/core';
+import { Component, NgZone, ChangeDetectorRef, ViewContainerRef, ViewChild, AfterViewInit, Input } from '@angular/core';
 
 //  Turn on enableProdMode() in main.ts to use this component!
 
@@ -13,19 +13,22 @@ export class DimmerComponent implements AfterViewInit {
     
     @Input() set show(show) {
         this.tabBarElement = document.querySelector('#mainTabs-tabs1 .tabbar');
-        console.log(this.tabBarElement);
 
         if (show) 
             this.tabBarElement.style.display = 'none'
         else
             this.tabBarElement.style.display = 'flex';
         
-        setTimeout(()=> { this._show = show }, 1500)
+        setTimeout(()=> { 
+            this._show = show;
+            this.ngZone.run(() => { this._ref.detectChanges(); });
+        }, 1500)
     }
     
     constructor(
         private _dimmer: ViewContainerRef,
-        private zone: NgZone
+        public _ref: ChangeDetectorRef,
+        public ngZone: NgZone
     ) {}
     
     tabBarElement;

@@ -8,6 +8,13 @@ export class StorageService {
         dimScreen: false,
         cameraActive: false,
         hideTabs: false,
+        fileNamingConvention: { label: 'Timestamp', value: '0' },
+        uploadGoogle: false,
+        
+        fileNamingConventions: [
+            { type: 'radio', label: 'Timestamp', value: '0' },
+            { type: 'radio', label: 'Number', value: '1' }
+        ],
         
         cameraSettings: {
                             focus: { value: 'auto', label: 'Auto' },

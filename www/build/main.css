@@ -25723,7 +25723,7 @@ ion-content:not(.background-color-transparent) {
 }
 
 img {
-  position: relative;
+  position: absolute;
   z-index: 200001;
 }
 

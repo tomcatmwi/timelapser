@@ -10,6 +10,7 @@ import {Platform} from 'ionic-angular';
 import {FormatterService} from '../../services/formatter.service';
 import {FileSystemService} from '../../services/filesystem.service';
 import {AudioService} from '../../services/audio.service';
+import {Diagnostic} from '@ionic-native/diagnostic';
 
 @Component({
     selector: 'page-camera-view',
@@ -25,7 +26,7 @@ import {AudioService} from '../../services/audio.service';
 
 })
 export class CameraViewPage {
-    
+
     constructor(public navCtrl: NavController,
         public cameraPreview: CameraPreview,
         public screenOrientation: ScreenOrientation,
@@ -35,6 +36,7 @@ export class CameraViewPage {
         public storageService: StorageService,
         public audioService: AudioService,
         private insomnia: Insomnia,
+        private diagnostic: Diagnostic,
         public formatterService: FormatterService) {
     }
 
@@ -50,6 +52,18 @@ export class CameraViewPage {
     tabBarElement;
 
     imageOptions: CameraPreviewPictureOptions;
+
+    fatalError(message) {
+        let alert = this.alertCtrl.create({
+            title: 'Error',
+            subTitle: message,
+            buttons: [{
+                text: 'Quit',
+                handler: () => {this.platform.exitApp()}
+            }]
+        });
+        alert.present();
+    }
 
     ionViewWillLeave() {
         this.screenOrientation.unlock();
@@ -74,91 +88,120 @@ export class CameraViewPage {
     }
 
     ionViewWillEnter() {
-        
-        this.platform.ready().then(readySource => {
-            
-            this.storageService.setValue('cameraActive', false);
 
-            //  lock screen in landscape mode
-            this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE);
+        this.platform.ready().then(
+            readySource => {
 
-            //  check output directory and create if it doesn't exist
-            this.fileSystem.checkDataDir().subscribe(
-                (result) => {},
-                (err) => {}
-            );
+                new Promise(
+                    (resolve, reject) => {
 
-            var cameraSettings = this.storageService.storage.cameraSettings;
+                        //  ----------------------------------------------------------------
 
-            var cameraPreviewOpts: CameraPreviewOptions = {
-                x: 0,
-                y: 0,
-                camera: cameraSettings.camera.value,
-                toBack: true,
-                tapPhoto: false,
-                previewDrag: false
-            };
-
-            this.imageOptions = {
-                width: this.storageService.storage.cameraSettings.resolution.value.width,
-                height: this.storageService.storage.cameraSettings.resolution.value.height,
-                quality: this.storageService.storage.cameraSettings.quality
-            }
-
-            // stop and restart camera
-
-            var width = window.screen.width;
-            var height = window.screen.height;
-            if (width < height)[width, height] = [height, width];
-
-            cameraPreviewOpts.width = width;
-            cameraPreviewOpts.height = width / 1.25;
-
-            new Promise((resolve, reject) => {
-
-                this.cameraPreview.startCamera(cameraPreviewOpts).then(
-                    () => {console.log('Camera init OK')},
-                    (error) => {
-                        this.noPhoto = true;
-                        let alert = this.alertCtrl.create({
-                            title: 'Camera error',
-                            subTitle: error,
-                            buttons: ['Right']
-                        });
-                        this.storageService.setValue('cameraActive', false);
-                        alert.present();
-                        this.audioService.playSound('error');
-                    }
-                )
-                    .then(() => {
-                        this.cameraPreview.show().then(
-                            () => {
-                                setTimeout(() => {resolve();}, 1000);
-                                console.log('Camera is showing OK')
+                        window['cordova']['plugins']['diagnostic'].isCameraAuthorized(
+                            result => {
+                                console.log('Camera authorization state: ', result)
+                                if (!result) {
+                                    this.diagnostic.requestCameraAuthorization(true)
+                                        .then(
+                                        result => {
+                                            if (result == 'GRANTED') resolve()
+                                            else reject('Authorization denied - the app can\'t run!')
+                                        },
+                                        error => reject(error))
+                                } else resolve(true);
                             },
-                            (error) => {
-                                this.noPhoto = true;
-                                let alert = this.alertCtrl.create({
-                                    title: 'Camera error',
-                                    subTitle: error,
-                                    buttons: ['Right']
-                                });
-                                this.storageService.setValue('cameraActive', false);
-                                alert.present();
-                                this.audioService.playSound('error');
-                            }
-                        )
+                            error => reject(error),
+                            true)
+                    }).then(
+                    success => this.initialize(),
+                    error => this.fatalError(error)
+                    ).catch(
+                    error => this.fatalError(error)
+                    )
+            });
+    }
 
-                    })
-            })
+    initialize() {
+        this.storageService.setValue('cameraActive', false);
 
-    //  set flash ---------------------------------------------------------------------------------------
+        //  lock screen in landscape mode
+        this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE);
 
-                .then(
-                () => {
-                    this.cameraPreview.getSupportedFlashModes().then(
-                        data => {
-                            if (data.indexOf(cameraSettings.flash.value) != -1)
+        //  check output directory and create if it doesn't exist
+        this.fileSystem.checkDataDir().subscribe(
+            (result) => {},
+            (err) => {}
+        );
+
+        var cameraSettings = this.storageService.storage.cameraSettings;
+
+        var cameraPreviewOpts: CameraPreviewOptions = {
+            x: 0,
+            y: 0,
+            camera: cameraSettings.camera.value,
+            toBack: true,
+            tapPhoto: false,
+            previewDrag: false
+        };
+
+        this.imageOptions = {
+            width: this.storageService.storage.cameraSettings.resolution.value.width,
+            height: this.storageService.storage.cameraSettings.resolution.value.height,
+            quality: this.storageService.storage.cameraSettings.quality
+        }
+
+        // stop and restart camera
+
+        var width = window.screen.width;
+        var height = window.screen.height;
+        if (width < height)[width, height] = [height, width];
+
+        cameraPreviewOpts.width = width;
+        cameraPreviewOpts.height = width / 1.25;
+
+        new Promise((resolve, reject) => {
+
+            this.cameraPreview.startCamera(cameraPreviewOpts).then(
+                () => {console.log('Camera init OK')},
+                (error) => {
+                    this.noPhoto = true;
+                    let alert = this.alertCtrl.create({
+                        title: 'Camera error',
+                        subTitle: error,
+                        buttons: ['Right']
+                    });
+                    alert.present();
+                    this.storageService.setValue('cameraActive', false);
+                }
+            )
+                .then(() => {
+                    this.cameraPreview.show().then(
+                        () => {
+                            setTimeout(() => {resolve();}, 1000);
+                            console.log('Camera is showing OK')
+                        },
+                        (error) => {
+                            this.noPhoto = true;
+                            let alert = this.alertCtrl.create({
+                                title: 'Camera error',
+                                subTitle: error,
+                                buttons: ['Right']
+                            });
+                            alert.present();
+                            this.storageService.setValue('cameraActive', false);
+                        }
+                    )
+
+                })
+        })
+
+            //  set flash ---------------------------------------------------------------------------------------
+
+            .then(
+            () => {
+                this.cameraPreview.getSupportedFlashModes().then(
+                    data => {
+                        if (data.indexOf(cameraSettings.flash.value) != -1)
                             this.cameraPreview.setFlashMode(cameraSettings.flash.value).then(
                                 () => console.log('Flash setting OK'),
                                 (error) => {
@@ -171,20 +214,20 @@ export class CameraViewPage {
                                     alert.present();
                                 }
                             )
-                        },
-                        error => {
-                            console.log('Flash error: ', error);
-                        }
-                    )
-                })
+                    },
+                    error => {
+                        console.log('Flash error: ', error);
+                    }
+                )
+            })
 
-    //  set focus ---------------------------------------------------------------------------------------
+            //  set focus ---------------------------------------------------------------------------------------
 
-                .then(
-                () => {
-                    this.cameraPreview.getSupportedFocusModes().then(
-                        data => {
-                            if (data.indexOf(cameraSettings.focus.value) != -1)
+            .then(
+            () => {
+                this.cameraPreview.getSupportedFocusModes().then(
+                    data => {
+                        if (data.indexOf(cameraSettings.focus.value) != -1)
                             this.cameraPreview.setFocusMode(cameraSettings.focus.value).then(
                                 () => console.log('Focus setting OK'),
                                 (error) => {
@@ -197,76 +240,76 @@ export class CameraViewPage {
                                     alert.present();
                                 }
                             )
-                        },
-                        error => {
-                            console.log('Focus error: ', error);
-                        }
-                    )
-                })
-                
-    //  set effect ---------------------------------------------------------------------------------------
-
-                .then(
-                () => {
-                    this.cameraPreview.setColorEffect(cameraSettings.effect.value).then(
-                        () => console.log('Effect setting OK'),
-                        (error) => {
-                            console.log('Effect setting error: ', error);
-                            let alert = this.alertCtrl.create({
-                                title: 'Error',
-                                subTitle: 'This picture effect is not supported on this device.',
-                                buttons: ['Right']
-                            });
-                            alert.present();
-                        }
-                    )
-                })
-
-    //  get supported image sizes --------------------------------------------------------------------------
-                
-                .then(
-                () => {
-                    this.cameraPreview.getSupportedPictureSizes().then(
-                        data => {
-                            this.storageService.storage.cameraOptions.resolution = [];
-                            data.forEach(element => {
-                                this.storageService.storage.cameraOptions.resolution.push({
-                                    type: 'radio',
-                                    label: element.width + '×' + element.height,
-                                    value: element
-                                });
-                            })
-                        }
-                    )
-                });
-
-            //  activate camera timer
-
-            var counter = 0;
-
-            if (!this.cameraTimer)
-                this.cameraTimer = setInterval(() => {
-                    var currentTime = this.formatterService.getCurrentTimeAsString();
-                    counter += 5;
-
-                    if (
-                        !this.noPhoto &&
-                        this.storageService.getValue('cameraActive') &&
-                        (
-                            (currentTime == this.nextTake() && this.lastTake != currentTime) ||
-                            (this.storageService.storage['photoInterval'] > 0 && counter % this.storageService.storage['photoInterval'] == 0))
-                    ) {
-                        this.lastTake = currentTime;
-                        this.takePhoto();
-                        counter = 0;
+                    },
+                    error => {
+                        console.log('Focus error: ', error);
                     }
-                }, 5000);
+                )
+            })
 
-            // get free space on device
+            //  set effect ---------------------------------------------------------------------------------------
 
-            this.fileSystem.getFreeSpace().subscribe(result => this.freeSpace = result * 1024);
-            this.noPhoto = false;
-        });
+            .then(
+            () => {
+                this.cameraPreview.setColorEffect(cameraSettings.effect.value).then(
+                    () => console.log('Effect setting OK'),
+                    (error) => {
+                        console.log('Effect setting error: ', error);
+                        let alert = this.alertCtrl.create({
+                            title: 'Error',
+                            subTitle: 'This picture effect is not supported on this device.',
+                            buttons: ['Right']
+                        });
+                        alert.present();
+                    }
+                )
+            })
+
+            //  get supported image sizes --------------------------------------------------------------------------
+
+            .then(
+            () => {
+                this.cameraPreview.getSupportedPictureSizes().then(
+                    data => {
+                        this.storageService.storage.cameraOptions.resolution = [];
+                        data.forEach(element => {
+                            this.storageService.storage.cameraOptions.resolution.push({
+                                type: 'radio',
+                                label: element.width + '×' + element.height,
+                                value: element
+                            });
+                        })
+                    }
+                )
+            });
+
+        //  activate camera timer
+
+        var counter = 0;
+
+        if (!this.cameraTimer)
+            this.cameraTimer = setInterval(() => {
+                var currentTime = this.formatterService.getCurrentTimeAsString();
+                counter += 5;
+
+                if (
+                    !this.noPhoto &&
+                    this.storageService.getValue('cameraActive') &&
+                    (
+                        (currentTime == this.nextTake() && this.lastTake != currentTime) ||
+                        (this.storageService.storage['photoInterval'] > 0 && counter % this.storageService.storage['photoInterval'] == 0))
+                ) {
+                    this.lastTake = currentTime;
+                    this.takePhoto();
+                    counter = 0;
+                }
+            }, 5000);
+
+        // get free space on device
+
+        this.fileSystem.getFreeSpace().subscribe(result => this.freeSpace = result * 1024);
+        this.noPhoto = false;
+
     }
 
     takePhoto() {
@@ -276,8 +319,16 @@ export class CameraViewPage {
         this.cameraPreview.takePicture(this.imageOptions).then(
             imageData => {
 
+                var filename = this.formatterService.dateAsFilename() + '.jpg';
+
+                if (this.storageService.storage.fileNamingConvention.value == '1') {
+                    filename = String(this.imagesTaken) + '.jpg';
+                    while (filename.length < 12)
+                        filename = '0' + filename;
+                }
+
                 this.fileSystem.saveFile(
-                    this.formatterService.dateAsFilename() + '.jpg',
+                    filename,
                     this.formatterService.base64toBlob(imageData[0], 'image/jpeg')
                 ).subscribe(
                     success => {
@@ -343,9 +394,9 @@ export class CameraViewPage {
             });
             alert.present();
         }
-        
+
         this.tabBarElement = document.querySelector('#mainTabs-tabs1 .tabbar');
-        
+
         if (value) {
             this.insomnia.keepAwake().then(
                 () => this.storageService.setValue('cameraActive', true),

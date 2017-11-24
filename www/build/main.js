@@ -19,6 +19,12 @@ var StorageService = (function () {
             dimScreen: false,
             cameraActive: false,
             hideTabs: false,
+            fileNamingConvention: { label: 'Timestamp', value: '0' },
+            uploadGoogle: false,
+            fileNamingConventions: [
+                { type: 'radio', label: 'Timestamp', value: '0' },
+                { type: 'radio', label: 'Number', value: '1' }
+            ],
             cameraSettings: {
                 focus: { value: 'auto', label: 'Auto' },
                 camera: { value: 'rear', label: 'Rear' },
@@ -105,7 +111,7 @@ var StorageService = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_observable_fromPromise__ = __webpack_require__(284);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_observable_fromPromise__ = __webpack_require__(285);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_add_observable_fromPromise___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_add_observable_fromPromise__);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -244,8 +250,8 @@ webpackEmptyAsyncContext.id = 158;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__camera_view_camera_view__ = __webpack_require__(202);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__images_images__ = __webpack_require__(207);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__settings_settings__ = __webpack_require__(208);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__images_images__ = __webpack_require__(208);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__settings_settings__ = __webpack_require__(209);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -297,6 +303,7 @@ var MainTabsPage = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__services_formatter_service__ = __webpack_require__(51);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__services_filesystem_service__ = __webpack_require__(104);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__services_audio_service__ = __webpack_require__(205);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__ionic_native_diagnostic__ = __webpack_require__(207);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -318,8 +325,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
 var CameraViewPage = (function () {
-    function CameraViewPage(navCtrl, cameraPreview, screenOrientation, alertCtrl, platform, fileSystem, storageService, audioService, insomnia, formatterService) {
+    function CameraViewPage(navCtrl, cameraPreview, screenOrientation, alertCtrl, platform, fileSystem, storageService, audioService, insomnia, diagnostic, formatterService) {
         this.navCtrl = navCtrl;
         this.cameraPreview = cameraPreview;
         this.screenOrientation = screenOrientation;
@@ -329,6 +337,7 @@ var CameraViewPage = (function () {
         this.storageService = storageService;
         this.audioService = audioService;
         this.insomnia = insomnia;
+        this.diagnostic = diagnostic;
         this.formatterService = formatterService;
         this.panelHidden = false;
         this.noPhoto = true;
@@ -336,6 +345,18 @@ var CameraViewPage = (function () {
         this.imagesTaken = 0;
         this.lastTake = 'None';
     }
+    CameraViewPage.prototype.fatalError = function (message) {
+        var _this = this;
+        var alert = this.alertCtrl.create({
+            title: 'Error',
+            subTitle: message,
+            buttons: [{
+                    text: 'Quit',
+                    handler: function () { _this.platform.exitApp(); }
+                }]
+        });
+        alert.present();
+    };
     CameraViewPage.prototype.ionViewWillLeave = function () {
         this.screenOrientation.unlock();
         if (this.storageService.getValue('cameraActive')) {
@@ -353,136 +374,154 @@ var CameraViewPage = (function () {
     CameraViewPage.prototype.ionViewWillEnter = function () {
         var _this = this;
         this.platform.ready().then(function (readySource) {
-            _this.storageService.setValue('cameraActive', false);
-            //  lock screen in landscape mode
-            _this.screenOrientation.lock(_this.screenOrientation.ORIENTATIONS.LANDSCAPE);
-            //  check output directory and create if it doesn't exist
-            _this.fileSystem.checkDataDir().subscribe(function (result) { }, function (err) { });
-            var cameraSettings = _this.storageService.storage.cameraSettings;
-            var cameraPreviewOpts = {
-                x: 0,
-                y: 0,
-                camera: cameraSettings.camera.value,
-                toBack: true,
-                tapPhoto: false,
-                previewDrag: false
-            };
-            _this.imageOptions = {
-                width: _this.storageService.storage.cameraSettings.resolution.value.width,
-                height: _this.storageService.storage.cameraSettings.resolution.value.height,
-                quality: _this.storageService.storage.cameraSettings.quality
-            };
-            // stop and restart camera
-            var width = window.screen.width;
-            var height = window.screen.height;
-            if (width < height)
-                _a = [height, width], width = _a[0], height = _a[1];
-            cameraPreviewOpts.width = width;
-            cameraPreviewOpts.height = width / 1.25;
             new Promise(function (resolve, reject) {
-                _this.cameraPreview.startCamera(cameraPreviewOpts).then(function () { console.log('Camera init OK'); }, function (error) {
+                //  ----------------------------------------------------------------
+                window['cordova']['plugins']['diagnostic'].isCameraAuthorized(function (result) {
+                    console.log('Camera authorization state: ', result);
+                    if (!result) {
+                        _this.diagnostic.requestCameraAuthorization(true)
+                            .then(function (result) {
+                            if (result == 'GRANTED')
+                                resolve();
+                            else
+                                reject('Authorization denied - the app can\'t run!');
+                        }, function (error) { return reject(error); });
+                    }
+                    else
+                        resolve(true);
+                }, function (error) { return reject(error); }, true);
+            }).then(function (success) { return _this.initialize(); }, function (error) { return _this.fatalError(error); }).catch(function (error) { return _this.fatalError(error); });
+        });
+    };
+    CameraViewPage.prototype.initialize = function () {
+        var _this = this;
+        this.storageService.setValue('cameraActive', false);
+        //  lock screen in landscape mode
+        this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE);
+        //  check output directory and create if it doesn't exist
+        this.fileSystem.checkDataDir().subscribe(function (result) { }, function (err) { });
+        var cameraSettings = this.storageService.storage.cameraSettings;
+        var cameraPreviewOpts = {
+            x: 0,
+            y: 0,
+            camera: cameraSettings.camera.value,
+            toBack: true,
+            tapPhoto: false,
+            previewDrag: false
+        };
+        this.imageOptions = {
+            width: this.storageService.storage.cameraSettings.resolution.value.width,
+            height: this.storageService.storage.cameraSettings.resolution.value.height,
+            quality: this.storageService.storage.cameraSettings.quality
+        };
+        // stop and restart camera
+        var width = window.screen.width;
+        var height = window.screen.height;
+        if (width < height)
+            _a = [height, width], width = _a[0], height = _a[1];
+        cameraPreviewOpts.width = width;
+        cameraPreviewOpts.height = width / 1.25;
+        new Promise(function (resolve, reject) {
+            _this.cameraPreview.startCamera(cameraPreviewOpts).then(function () { console.log('Camera init OK'); }, function (error) {
+                _this.noPhoto = true;
+                var alert = _this.alertCtrl.create({
+                    title: 'Camera error',
+                    subTitle: error,
+                    buttons: ['Right']
+                });
+                alert.present();
+                _this.storageService.setValue('cameraActive', false);
+            })
+                .then(function () {
+                _this.cameraPreview.show().then(function () {
+                    setTimeout(function () { resolve(); }, 1000);
+                    console.log('Camera is showing OK');
+                }, function (error) {
                     _this.noPhoto = true;
                     var alert = _this.alertCtrl.create({
                         title: 'Camera error',
                         subTitle: error,
                         buttons: ['Right']
                     });
-                    _this.storageService.setValue('cameraActive', false);
                     alert.present();
-                    _this.audioService.playSound('error');
-                })
-                    .then(function () {
-                    _this.cameraPreview.show().then(function () {
-                        setTimeout(function () { resolve(); }, 1000);
-                        console.log('Camera is showing OK');
-                    }, function (error) {
-                        _this.noPhoto = true;
+                    _this.storageService.setValue('cameraActive', false);
+                });
+            });
+        })
+            .then(function () {
+            _this.cameraPreview.getSupportedFlashModes().then(function (data) {
+                if (data.indexOf(cameraSettings.flash.value) != -1)
+                    _this.cameraPreview.setFlashMode(cameraSettings.flash.value).then(function () { return console.log('Flash setting OK'); }, function (error) {
+                        console.log('Flash: ', error);
                         var alert = _this.alertCtrl.create({
-                            title: 'Camera error',
-                            subTitle: error,
+                            title: 'Error',
+                            subTitle: 'The current flash setting is not supported on this device.',
                             buttons: ['Right']
                         });
-                        _this.storageService.setValue('cameraActive', false);
                         alert.present();
-                        _this.audioService.playSound('error');
                     });
-                });
-            })
-                .then(function () {
-                _this.cameraPreview.getSupportedFlashModes().then(function (data) {
-                    if (data.indexOf(cameraSettings.flash.value) != -1)
-                        _this.cameraPreview.setFlashMode(cameraSettings.flash.value).then(function () { return console.log('Flash setting OK'); }, function (error) {
-                            console.log('Flash: ', error);
-                            var alert = _this.alertCtrl.create({
-                                title: 'Error',
-                                subTitle: 'The current flash setting is not supported on this device.',
-                                buttons: ['Right']
-                            });
-                            alert.present();
+            }, function (error) {
+                console.log('Flash error: ', error);
+            });
+        })
+            .then(function () {
+            _this.cameraPreview.getSupportedFocusModes().then(function (data) {
+                if (data.indexOf(cameraSettings.focus.value) != -1)
+                    _this.cameraPreview.setFocusMode(cameraSettings.focus.value).then(function () { return console.log('Focus setting OK'); }, function (error) {
+                        console.log('Focus error: ', error);
+                        var alert = _this.alertCtrl.create({
+                            title: 'Error',
+                            subTitle: 'The current focus setting is not supported on this device.',
+                            buttons: ['Right']
                         });
-                }, function (error) {
-                    console.log('Flash error: ', error);
-                });
-            })
-                .then(function () {
-                _this.cameraPreview.getSupportedFocusModes().then(function (data) {
-                    if (data.indexOf(cameraSettings.focus.value) != -1)
-                        _this.cameraPreview.setFocusMode(cameraSettings.focus.value).then(function () { return console.log('Focus setting OK'); }, function (error) {
-                            console.log('Focus error: ', error);
-                            var alert = _this.alertCtrl.create({
-                                title: 'Error',
-                                subTitle: 'The current focus setting is not supported on this device.',
-                                buttons: ['Right']
-                            });
-                            alert.present();
-                        });
-                }, function (error) {
-                    console.log('Focus error: ', error);
-                });
-            })
-                .then(function () {
-                _this.cameraPreview.setColorEffect(cameraSettings.effect.value).then(function () { return console.log('Effect setting OK'); }, function (error) {
-                    console.log('Effect setting error: ', error);
-                    var alert = _this.alertCtrl.create({
-                        title: 'Error',
-                        subTitle: 'This picture effect is not supported on this device.',
-                        buttons: ['Right']
+                        alert.present();
                     });
-                    alert.present();
+            }, function (error) {
+                console.log('Focus error: ', error);
+            });
+        })
+            .then(function () {
+            _this.cameraPreview.setColorEffect(cameraSettings.effect.value).then(function () { return console.log('Effect setting OK'); }, function (error) {
+                console.log('Effect setting error: ', error);
+                var alert = _this.alertCtrl.create({
+                    title: 'Error',
+                    subTitle: 'This picture effect is not supported on this device.',
+                    buttons: ['Right']
                 });
-            })
-                .then(function () {
-                _this.cameraPreview.getSupportedPictureSizes().then(function (data) {
-                    _this.storageService.storage.cameraOptions.resolution = [];
-                    data.forEach(function (element) {
-                        _this.storageService.storage.cameraOptions.resolution.push({
-                            type: 'radio',
-                            label: element.width + '×' + element.height,
-                            value: element
-                        });
+                alert.present();
+            });
+        })
+            .then(function () {
+            _this.cameraPreview.getSupportedPictureSizes().then(function (data) {
+                _this.storageService.storage.cameraOptions.resolution = [];
+                data.forEach(function (element) {
+                    _this.storageService.storage.cameraOptions.resolution.push({
+                        type: 'radio',
+                        label: element.width + '×' + element.height,
+                        value: element
                     });
                 });
             });
-            //  activate camera timer
-            var counter = 0;
-            if (!_this.cameraTimer)
-                _this.cameraTimer = setInterval(function () {
-                    var currentTime = _this.formatterService.getCurrentTimeAsString();
-                    counter += 5;
-                    if (!_this.noPhoto &&
-                        _this.storageService.getValue('cameraActive') &&
-                        ((currentTime == _this.nextTake() && _this.lastTake != currentTime) ||
-                            (_this.storageService.storage['photoInterval'] > 0 && counter % _this.storageService.storage['photoInterval'] == 0))) {
-                        _this.lastTake = currentTime;
-                        _this.takePhoto();
-                        counter = 0;
-                    }
-                }, 5000);
-            // get free space on device
-            _this.fileSystem.getFreeSpace().subscribe(function (result) { return _this.freeSpace = result * 1024; });
-            _this.noPhoto = false;
-            var _a;
         });
+        //  activate camera timer
+        var counter = 0;
+        if (!this.cameraTimer)
+            this.cameraTimer = setInterval(function () {
+                var currentTime = _this.formatterService.getCurrentTimeAsString();
+                counter += 5;
+                if (!_this.noPhoto &&
+                    _this.storageService.getValue('cameraActive') &&
+                    ((currentTime == _this.nextTake() && _this.lastTake != currentTime) ||
+                        (_this.storageService.storage['photoInterval'] > 0 && counter % _this.storageService.storage['photoInterval'] == 0))) {
+                    _this.lastTake = currentTime;
+                    _this.takePhoto();
+                    counter = 0;
+                }
+            }, 5000);
+        // get free space on device
+        this.fileSystem.getFreeSpace().subscribe(function (result) { return _this.freeSpace = result * 1024; });
+        this.noPhoto = false;
+        var _a;
     };
     CameraViewPage.prototype.takePhoto = function () {
         var _this = this;
@@ -490,7 +529,13 @@ var CameraViewPage = (function () {
             return false;
         this.noPhoto = true;
         this.cameraPreview.takePicture(this.imageOptions).then(function (imageData) {
-            _this.fileSystem.saveFile(_this.formatterService.dateAsFilename() + '.jpg', _this.formatterService.base64toBlob(imageData[0], 'image/jpeg')).subscribe(function (success) {
+            var filename = _this.formatterService.dateAsFilename() + '.jpg';
+            if (_this.storageService.storage.fileNamingConvention.value == '1') {
+                filename = String(_this.imagesTaken) + '.jpg';
+                while (filename.length < 12)
+                    filename = '0' + filename;
+            }
+            _this.fileSystem.saveFile(filename, _this.formatterService.base64toBlob(imageData[0], 'image/jpeg')).subscribe(function (success) {
                 _this.imagesTaken++;
                 _this.noPhoto = false;
             }, function (err) {
@@ -578,6 +623,7 @@ var CameraViewPage = (function () {
             __WEBPACK_IMPORTED_MODULE_5__services_storage_service__["a" /* StorageService */],
             __WEBPACK_IMPORTED_MODULE_9__services_audio_service__["a" /* AudioService */],
             __WEBPACK_IMPORTED_MODULE_2__ionic_native_insomnia__["a" /* Insomnia */],
+            __WEBPACK_IMPORTED_MODULE_10__ionic_native_diagnostic__["a" /* Diagnostic */],
             __WEBPACK_IMPORTED_MODULE_7__services_formatter_service__["a" /* FormatterService */]])
     ], CameraViewPage);
     return CameraViewPage;
@@ -635,7 +681,7 @@ var AudioService = (function () {
 
 /***/ }),
 
-/***/ 207:
+/***/ 208:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -809,7 +855,7 @@ var ImagesPage = (function () {
 
 /***/ }),
 
-/***/ 208:
+/***/ 209:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1056,9 +1102,32 @@ var SettingsPage = (function () {
         });
         selector.present();
     };
+    SettingsPage.prototype.setFileNamingConvention = function () {
+        var _this = this;
+        var selector = this.alertCtrl.create({
+            title: 'File naming',
+            inputs: this.storageService.storage.fileNamingConventions,
+            buttons: [
+                {
+                    text: 'Cancel',
+                    role: 'cancel',
+                    handler: function (data) { }
+                },
+                {
+                    text: 'Set',
+                    handler: function (data) {
+                        for (var t in _this.storageService.storage.fileNamingConventions)
+                            if (_this.storageService.storage.fileNamingConventions[t].value == data)
+                                _this.storageService.storage.fileNamingConvention = _this.storageService.storage.fileNamingConventions[t];
+                    }
+                }
+            ]
+        });
+        selector.present();
+    };
     SettingsPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
-            selector: 'page-settings',template:/*ion-inline-start:"f:\Cordova\timelapser\src\pages\settings\settings.html"*/'<ion-content padding id="page4">\n\n    <ion-card>\n        <ion-card-content>\n            <p>Take a photo at the following times every day:</p>\n            <ion-list id="settings-list4" *ngIf="storageService.storage?.times?.length > 0">\n                <ion-item color="none" id="settings-list-item16" *ngFor="let time of storageService.storage.times; let i=index">\n                          {{ time }}\n                          <ion-icon name="close" item-right (click)="deleteTime(i)"></ion-icon>\n                </ion-item>\n            </ion-list>\n            <ion-list id="settings-list4" *ngIf="storageService.storage?.times?.length <= 0">\n                <ion-item color="none" id="settings-list-item16">\n                    <ion-icon name="timer" item-left></ion-icon>\n                    No times defined\n                </ion-item>\n            </ion-list>\n            <button id="settings-button1" ion-button color="positive" block (click)="addTime()">Add new time</button>\n        </ion-card-content>\n    </ion-card>\n\n    <!----------------------------------------------------------------------------------------------------------->\n\n    <ion-card>\n        <ion-card-content>\n            <p>Take photos infinitely at the following interval:</p>\n            <ion-list>\n                <ion-item color="none" id="settings-list-item16">\n                    <ion-icon name="timer" item-left></ion-icon>\n                    {{ this.storageService.getValue(\'photoIntervalText\') }}\n                </ion-item>\n            </ion-list>\n\n            <button ion-button color="positive" block (click)="setPhotoInterval()">Set interval</button>\n        </ion-card-content>\n    </ion-card>\n    \n    <!----------------------------------------------------------------------------------------------------------->\n\n    <ion-card>\n        <ion-card-content>\n        <ion-item>\n            <ion-label>\n            Turn off screen\n            </ion-label>\n            <ion-toggle [(ngModel)]="storageService.storage[\'dimCamera\']"></ion-toggle>\n        </ion-item>\n        </ion-card-content>\n    </ion-card>\n    \n    <!----------------------------------------------------------------------------------------------------------->\n    \n<!-- \n\n    DEACTIVATED until CameraPreview supports disabling the default shutter sound!\n\n    <ion-card>\n        <ion-card-content>\n            <p>Play sound when taking photo:</p>\n            <ion-list>\n                <ion-item color="none" id="settings-list-item16">\n                    <ion-icon name="volume-up" item-left (click)="playSound()"></ion-icon>\n                    {{ currentSound }}\n                </ion-item>\n            </ion-list>\n\n            <button ion-button color="positive" block (click)="setSound()">Set sound</button>\n            \n        </ion-card-content>\n    </ion-card>\n-->\n\n    <!----------------------------------------------------------------------------------------------------------->\n\n    <ion-card>\n        <ion-card-content>\n            <p>Camera options</p>\n            <ion-list>\n                <ion-item color="none" (click)="setValue(\'camera\', \'Camera\')">\n                        Camera: {{ storageService?.storage?.cameraSettings?.camera?.label }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setValue(\'flash\', \'Flash mode\')">\n                        Flash: {{ storageService?.storage?.cameraSettings?.flash?.label }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setValue(\'focus\', \'Focus mode\')">\n                        Focus mode: {{ storageService?.storage?.cameraSettings?.focus?.label }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setValue(\'effect\', \'Color effect\')">\n                        Color effect: {{ storageService?.storage?.cameraSettings?.effect?.label }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setValue(\'resolution\', \'Pikture size\')">\n                        Picture size: {{ storageService?.storage?.cameraSettings?.resolution?.value?.width }}&times;{{ storageService?.storage?.cameraSettings?.resolution?.value?.height }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setImageQuality()">\n                        Photo quality: {{ storageService.storage.cameraSettings.quality }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n            </ion-list>\n        </ion-card-content>\n    </ion-card>\n\n</ion-content>\n'/*ion-inline-end:"f:\Cordova\timelapser\src\pages\settings\settings.html"*/
+            selector: 'page-settings',template:/*ion-inline-start:"f:\Cordova\timelapser\src\pages\settings\settings.html"*/'<ion-content padding id="page4">\n\n    <ion-card>\n        <ion-card-content>\n            <p>Take a photo at the following times every day:</p>\n            <ion-list id="settings-list4" *ngIf="storageService.storage?.times?.length > 0">\n                <ion-item color="none" id="settings-list-item16" *ngFor="let time of storageService.storage.times; let i=index">\n                          {{ time }}\n                          <ion-icon name="close" item-right (click)="deleteTime(i)"></ion-icon>\n                </ion-item>\n            </ion-list>\n            <ion-list id="settings-list4" *ngIf="storageService.storage?.times?.length <= 0">\n                <ion-item color="none" id="settings-list-item16">\n                    <ion-icon name="timer" item-left></ion-icon>\n                    No times defined\n                </ion-item>\n            </ion-list>\n            <button id="settings-button1" ion-button color="positive" block (click)="addTime()">Add new time</button>\n        </ion-card-content>\n    </ion-card>\n\n    <!----------------------------------------------------------------------------------------------------------->\n\n    <ion-card>\n        <ion-card-content>\n            <p>Take photos infinitely at the following interval:</p>\n            <ion-list>\n                <ion-item color="none" id="settings-list-item16" (click)="setPhotoInterval()">\n                    <ion-icon name="timer" item-left></ion-icon>\n                    {{ this.storageService.getValue(\'photoIntervalText\') }}\n                    <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n            </ion-list>\n        </ion-card-content>\n    </ion-card>\n    \n    <!----------------------------------------------------------------------------------------------------------->\n\n    <ion-card>\n        <ion-card-content>\n            <p>File naming convention:</p>\n            <ion-list>\n                <ion-item color="none" id="settings-list-item16" (click)="setFileNamingConvention()">\n                    {{ this.storageService.storage?.fileNamingConvention?.label }}\n                    <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n            </ion-list>\n        </ion-card-content>\n    </ion-card>\n\n    <!----------------------------------------------------------------------------------------------------------->\n\n    <ion-card>\n        <ion-card-content>\n        <ion-item>\n            <ion-label>\n            Turn off screen\n            </ion-label>\n            <ion-toggle [(ngModel)]="storageService.storage[\'dimCamera\']"></ion-toggle>\n        </ion-item>\n        </ion-card-content>\n    </ion-card>\n    \n    <!----------------------------------------------------------------------------------------------------------->\n    \n<!-- \n\n    DEACTIVATED until CameraPreview supports disabling the default shutter sound!\n\n    <ion-card>\n        <ion-card-content>\n            <p>Play sound when taking photo:</p>\n            <ion-list>\n                <ion-item color="none" id="settings-list-item16">\n                    <ion-icon name="volume-up" item-left (click)="playSound()"></ion-icon>\n                    {{ currentSound }}\n                </ion-item>\n            </ion-list>\n\n            <button ion-button color="positive" block (click)="setSound()">Set sound</button>\n            \n        </ion-card-content>\n    </ion-card>\n-->\n\n    <!----------------------------------------------------------------------------------------------------------->\n\n    <ion-card>\n        <ion-card-content>\n            <p>Camera options</p>\n            <ion-list>\n                <ion-item color="none" (click)="setValue(\'camera\', \'Camera\')">\n                        Camera: {{ storageService?.storage?.cameraSettings?.camera?.label }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setValue(\'flash\', \'Flash mode\')">\n                        Flash: {{ storageService?.storage?.cameraSettings?.flash?.label }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setValue(\'focus\', \'Focus mode\')">\n                        Focus mode: {{ storageService?.storage?.cameraSettings?.focus?.label }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setValue(\'effect\', \'Color effect\')">\n                        Color effect: {{ storageService?.storage?.cameraSettings?.effect?.label }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setValue(\'resolution\', \'Pikture size\')">\n                        Picture size: {{ storageService?.storage?.cameraSettings?.resolution?.value?.width }}&times;{{ storageService?.storage?.cameraSettings?.resolution?.value?.height }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n                <ion-item color="none" (click)="setImageQuality()">\n                        Photo quality: {{ storageService.storage.cameraSettings.quality }}\n                        <ion-icon name="ios-arrow-forward" item-right></ion-icon>\n                </ion-item>\n            </ion-list>\n        </ion-card-content>\n    </ion-card>\n\n</ion-content>\n'/*ion-inline-end:"f:\Cordova\timelapser\src\pages\settings\settings.html"*/
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavController */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["b" /* AlertController */],
@@ -1072,13 +1141,13 @@ var SettingsPage = (function () {
 
 /***/ }),
 
-/***/ 209:
+/***/ 210:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__ = __webpack_require__(210);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__app_module__ = __webpack_require__(233);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__ = __webpack_require__(211);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__app_module__ = __webpack_require__(234);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_core__ = __webpack_require__(0);
 
 
@@ -1089,7 +1158,7 @@ Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* pl
 
 /***/ }),
 
-/***/ 233:
+/***/ 234:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1097,32 +1166,34 @@ Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* pl
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__ = __webpack_require__(22);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__app_component__ = __webpack_require__(275);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__app_component__ = __webpack_require__(276);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_camera_preview__ = __webpack_require__(204);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_screen_orientation__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__angular_platform_browser_animations__ = __webpack_require__(285);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__angular_platform_browser_animations__ = __webpack_require__(286);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__ionic_native_file__ = __webpack_require__(105);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__ionic_native_native_audio__ = __webpack_require__(206);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__ionic_native_insomnia__ = __webpack_require__(203);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__pages_camera_view_camera_view__ = __webpack_require__(202);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__pages_images_images__ = __webpack_require__(207);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__pages_settings_settings__ = __webpack_require__(208);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__pages_main_tabs_main_tabs__ = __webpack_require__(201);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__components_photoviewer_photoviewer_component__ = __webpack_require__(287);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__components_dimmer_dimmer_component__ = __webpack_require__(288);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__ionic_native_status_bar__ = __webpack_require__(198);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__ionic_native_splash_screen__ = __webpack_require__(200);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__services_storage_service__ = __webpack_require__(102);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__services_filesystem_service__ = __webpack_require__(104);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__services_formatter_service__ = __webpack_require__(51);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__services_audio_service__ = __webpack_require__(205);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__pipes_formatter_pipe__ = __webpack_require__(289);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__ionic_native_diagnostic__ = __webpack_require__(207);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__pages_camera_view_camera_view__ = __webpack_require__(202);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__pages_images_images__ = __webpack_require__(208);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__pages_settings_settings__ = __webpack_require__(209);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__pages_main_tabs_main_tabs__ = __webpack_require__(201);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__components_photoviewer_photoviewer_component__ = __webpack_require__(288);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__components_dimmer_dimmer_component__ = __webpack_require__(289);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__ionic_native_status_bar__ = __webpack_require__(198);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__ionic_native_splash_screen__ = __webpack_require__(200);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__services_storage_service__ = __webpack_require__(102);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_20__services_filesystem_service__ = __webpack_require__(104);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__services_formatter_service__ = __webpack_require__(51);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_22__services_audio_service__ = __webpack_require__(205);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_23__pipes_formatter_pipe__ = __webpack_require__(290);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
 
 
 
@@ -1155,16 +1226,16 @@ var AppModule = (function () {
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["I" /* NgModule */])({
             declarations: [
                 __WEBPACK_IMPORTED_MODULE_3__app_component__["a" /* MyApp */],
-                __WEBPACK_IMPORTED_MODULE_10__pages_camera_view_camera_view__["a" /* CameraViewPage */],
-                __WEBPACK_IMPORTED_MODULE_11__pages_images_images__["a" /* ImagesPage */],
-                __WEBPACK_IMPORTED_MODULE_12__pages_settings_settings__["a" /* SettingsPage */],
-                __WEBPACK_IMPORTED_MODULE_13__pages_main_tabs_main_tabs__["a" /* MainTabsPage */],
-                __WEBPACK_IMPORTED_MODULE_14__components_photoviewer_photoviewer_component__["a" /* PhotoViewerComponent */],
-                __WEBPACK_IMPORTED_MODULE_15__components_dimmer_dimmer_component__["a" /* DimmerComponent */],
-                __WEBPACK_IMPORTED_MODULE_22__pipes_formatter_pipe__["c" /* FormatNumberPipe */],
-                __WEBPACK_IMPORTED_MODULE_22__pipes_formatter_pipe__["d" /* FormatSecondsPipe */],
-                __WEBPACK_IMPORTED_MODULE_22__pipes_formatter_pipe__["a" /* ChopStringPipe */],
-                __WEBPACK_IMPORTED_MODULE_22__pipes_formatter_pipe__["b" /* FilesizePipe */],
+                __WEBPACK_IMPORTED_MODULE_11__pages_camera_view_camera_view__["a" /* CameraViewPage */],
+                __WEBPACK_IMPORTED_MODULE_12__pages_images_images__["a" /* ImagesPage */],
+                __WEBPACK_IMPORTED_MODULE_13__pages_settings_settings__["a" /* SettingsPage */],
+                __WEBPACK_IMPORTED_MODULE_14__pages_main_tabs_main_tabs__["a" /* MainTabsPage */],
+                __WEBPACK_IMPORTED_MODULE_15__components_photoviewer_photoviewer_component__["a" /* PhotoViewerComponent */],
+                __WEBPACK_IMPORTED_MODULE_16__components_dimmer_dimmer_component__["a" /* DimmerComponent */],
+                __WEBPACK_IMPORTED_MODULE_23__pipes_formatter_pipe__["c" /* FormatNumberPipe */],
+                __WEBPACK_IMPORTED_MODULE_23__pipes_formatter_pipe__["d" /* FormatSecondsPipe */],
+                __WEBPACK_IMPORTED_MODULE_23__pipes_formatter_pipe__["a" /* ChopStringPipe */],
+                __WEBPACK_IMPORTED_MODULE_23__pipes_formatter_pipe__["b" /* FilesizePipe */],
             ],
             imports: [
                 __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__["a" /* BrowserModule */],
@@ -1176,21 +1247,22 @@ var AppModule = (function () {
             bootstrap: [__WEBPACK_IMPORTED_MODULE_2_ionic_angular__["d" /* IonicApp */]],
             entryComponents: [
                 __WEBPACK_IMPORTED_MODULE_3__app_component__["a" /* MyApp */],
-                __WEBPACK_IMPORTED_MODULE_10__pages_camera_view_camera_view__["a" /* CameraViewPage */],
-                __WEBPACK_IMPORTED_MODULE_11__pages_images_images__["a" /* ImagesPage */],
-                __WEBPACK_IMPORTED_MODULE_12__pages_settings_settings__["a" /* SettingsPage */],
-                __WEBPACK_IMPORTED_MODULE_13__pages_main_tabs_main_tabs__["a" /* MainTabsPage */]
+                __WEBPACK_IMPORTED_MODULE_11__pages_camera_view_camera_view__["a" /* CameraViewPage */],
+                __WEBPACK_IMPORTED_MODULE_12__pages_images_images__["a" /* ImagesPage */],
+                __WEBPACK_IMPORTED_MODULE_13__pages_settings_settings__["a" /* SettingsPage */],
+                __WEBPACK_IMPORTED_MODULE_14__pages_main_tabs_main_tabs__["a" /* MainTabsPage */]
             ],
             providers: [
-                __WEBPACK_IMPORTED_MODULE_16__ionic_native_status_bar__["a" /* StatusBar */],
-                __WEBPACK_IMPORTED_MODULE_17__ionic_native_splash_screen__["a" /* SplashScreen */],
-                __WEBPACK_IMPORTED_MODULE_18__services_storage_service__["a" /* StorageService */],
-                __WEBPACK_IMPORTED_MODULE_20__services_formatter_service__["a" /* FormatterService */],
-                __WEBPACK_IMPORTED_MODULE_19__services_filesystem_service__["a" /* FileSystemService */],
-                __WEBPACK_IMPORTED_MODULE_21__services_audio_service__["a" /* AudioService */],
+                __WEBPACK_IMPORTED_MODULE_17__ionic_native_status_bar__["a" /* StatusBar */],
+                __WEBPACK_IMPORTED_MODULE_18__ionic_native_splash_screen__["a" /* SplashScreen */],
+                __WEBPACK_IMPORTED_MODULE_19__services_storage_service__["a" /* StorageService */],
+                __WEBPACK_IMPORTED_MODULE_21__services_formatter_service__["a" /* FormatterService */],
+                __WEBPACK_IMPORTED_MODULE_20__services_filesystem_service__["a" /* FileSystemService */],
+                __WEBPACK_IMPORTED_MODULE_22__services_audio_service__["a" /* AudioService */],
                 __WEBPACK_IMPORTED_MODULE_4__ionic_native_camera_preview__["a" /* CameraPreview */],
                 __WEBPACK_IMPORTED_MODULE_5__ionic_native_screen_orientation__["a" /* ScreenOrientation */],
                 __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["g" /* LoadingController */],
+                __WEBPACK_IMPORTED_MODULE_10__ionic_native_diagnostic__["a" /* Diagnostic */],
                 __WEBPACK_IMPORTED_MODULE_7__ionic_native_file__["a" /* File */],
                 __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["c" /* Content */],
                 __WEBPACK_IMPORTED_MODULE_9__ionic_native_insomnia__["a" /* Insomnia */],
@@ -1206,7 +1278,7 @@ var AppModule = (function () {
 
 /***/ }),
 
-/***/ 275:
+/***/ 276:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1277,7 +1349,7 @@ var MyApp = (function () {
 
 /***/ }),
 
-/***/ 287:
+/***/ 288:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1326,14 +1398,6 @@ var PhotoViewerComponent = (function () {
         else
             this.imgClass = 'img-landscape';
     };
-    PhotoViewerComponent.prototype.ionViewWillEnter = function () {
-        console.log('segg');
-        this.tabBarElement.style.display = 'none';
-    };
-    PhotoViewerComponent.prototype.ionViewWillLeave = function () {
-        console.log('segg');
-        this.tabBarElement.style.display = 'block';
-    };
     PhotoViewerComponent.prototype.ngAfterViewInit = function () {
         var _this = this;
         this.setImageClass();
@@ -1352,7 +1416,7 @@ var PhotoViewerComponent = (function () {
     PhotoViewerComponent = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
             selector: 'photoviewer',template:/*ion-inline-start:"f:\Cordova\timelapser\src\components\photoviewer\photoviewer.component.html"*/'<ng-template #photoviewer>\n    <div id="container" *ngIf="show" (click)="showPicture()" (swipe)="nextImage($event)">\n        <div id="label" *ngIf="label">{{ label }}</div>\n        <img [src]="src" [class]="imgClass" />\n    </div>\n</ng-template>'/*ion-inline-end:"f:\Cordova\timelapser\src\components\photoviewer\photoviewer.component.html"*/,
-            outputs: ['getNextImage']
+            outputs: ['getNextImage'],
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_0__angular_core__["_10" /* ViewContainerRef */],
             __WEBPACK_IMPORTED_MODULE_1__ionic_native_screen_orientation__["a" /* ScreenOrientation */]])
@@ -1364,7 +1428,7 @@ var PhotoViewerComponent = (function () {
 
 /***/ }),
 
-/***/ 288:
+/***/ 289:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1382,19 +1446,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 //  Turn on enableProdMode() in main.ts to use this component!
 var DimmerComponent = (function () {
-    function DimmerComponent(_dimmer, zone) {
+    function DimmerComponent(_dimmer, _ref, ngZone) {
         this._dimmer = _dimmer;
-        this.zone = zone;
+        this._ref = _ref;
+        this.ngZone = ngZone;
     }
     Object.defineProperty(DimmerComponent.prototype, "show", {
         set: function (show) {
+            var _this = this;
             this.tabBarElement = document.querySelector('#mainTabs-tabs1 .tabbar');
-            console.log(this.tabBarElement);
             if (show)
                 this.tabBarElement.style.display = 'none';
             else
                 this.tabBarElement.style.display = 'flex';
-            this._show = show;
+            setTimeout(function () {
+                _this._show = show;
+                _this.ngZone.run(function () { _this._ref.detectChanges(); });
+            }, 1500);
         },
         enumerable: true,
         configurable: true
@@ -1416,6 +1484,7 @@ var DimmerComponent = (function () {
             selector: 'dimmer',template:/*ion-inline-start:"f:\Cordova\timelapser\src\components\dimmer\dimmer.component.html"*/'<ng-template #dimmer>\n    <div id="dimmer-div" class="dimmer" *ngIf="_show" (click)="_show=false">\n    </div>\n</ng-template>'/*ion-inline-end:"f:\Cordova\timelapser\src\components\dimmer\dimmer.component.html"*/,
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_0__angular_core__["_10" /* ViewContainerRef */],
+            __WEBPACK_IMPORTED_MODULE_0__angular_core__["j" /* ChangeDetectorRef */],
             __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* NgZone */]])
     ], DimmerComponent);
     return DimmerComponent;
@@ -1425,7 +1494,7 @@ var DimmerComponent = (function () {
 
 /***/ }),
 
-/***/ 289:
+/***/ 290:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1723,5 +1792,5 @@ var FormatterService = (function () {
 
 /***/ })
 
-},[209]);
+},[210]);
 //# sourceMappingURL=main.js.map

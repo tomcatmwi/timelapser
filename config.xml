@@ -1,18 +1,12 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.pixeldog.timelapser" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.pixeldog.timelapser" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Timelapser</name>
-    <description>An awesome Ionic/Cordova app.</description>
-    <author email="hi@ionicframework" href="http://ionicframework.com/">Ionic Framework Team</author>
+    <description>A timelapse photography application.</description>
+    <author email="tamas.polgar.pixeldog@gmail.com">Pixeldog</author>
     <content src="index.html" />
     <access origin="*" />
-    <allow-intent href="http://*/*" />
-    <allow-intent href="https://*/*" />
-    <allow-intent href="tel:*" />
-    <allow-intent href="sms:*" />
-    <allow-intent href="mailto:*" />
-    <allow-intent href="geo:*" />
     <preference name="ScrollEnabled" value="false" />
-    <preference name="android-minSdkVersion" value="16" />
+    <preference name="android-minSdkVersion" value="18" />
     <preference name="BackupWebStorage" value="none" />
     <preference name="SplashMaintainAspectRatio" value="true" />
     <preference name="FadeSplashScreenDuration" value="300" />
@@ -79,20 +73,25 @@
         <splash height="2732" src="resources/ios/splash/Default@2x~universal~anyany.png" width="2732" />
     </platform>
     <allow-navigation href="http://192.168.202.156:8100" />
+    <allow-navigation href="http://172.21.37.235:8100" />
     <plugin name="ionic-plugin-keyboard" spec="^2.2.1" />
     <plugin name="cordova-plugin-whitelist" spec="^1.3.1" />
     <plugin name="cordova-plugin-device" spec="^1.1.4" />
     <plugin name="cordova-plugin-splashscreen" spec="^4.0.3" />
     <plugin name="cordova-plugin-ionic-webview" spec="^1.1.16" />
     <plugin name="cordova-plugin-statusbar" spec="^2.2.3" />
-    <plugin name="cordova-plugin-camera" spec="^2.4.1" />
     <plugin name="cordova-plugin-camera-preview" spec="^0.9.0" />
     <plugin name="cordova-plugin-screen-orientation" spec="file:cordova-plugin-screen-orientation-master" />
     <plugin name="cordova-base64-to-gallery" spec="^4.1.2" />
-    <plugin name="com-sarriaroman-photoviewer" spec="^1.1.11" />
-    <plugin name="cordova-plugin-background-mode" spec="^0.7.2" />
     <plugin name="cordova-plugin-file-transfer" spec="^1.7.0" />
     <plugin name="cordova-plugin-nativeaudio" spec="^3.0.9" />
     <plugin name="cordova-plugin-insomnia" spec="^4.3.0" />
-    <allow-navigation href="http://172.21.37.235:8100" />
+    <plugin name="cordova-plugin-jc-googledrive" spec="^1.1.0">
+        <variable name="IOS_REVERSED_CLIENT_ID" value="com.googleusercontent.apps.446065894981-i80nn68vi4773khbo93evtgfhhradrio" />
+        <variable name="IOS_CLIENT_ID" value="446065894981-i80nn68vi4773khbo93evtgfhhradrio.apps.googleusercontent.com" />
+    </plugin>
+    <plugin name="cordova-plugin-camera" spec="^2.4.1" />
+    <plugin name="cordova-plugin-background-mode" spec="^0.7.2" />
+    <plugin name="cordova-plugin-android-permissions" spec="^1.0.0" />
+    <plugin name="cordova.plugins.diagnostic" spec="^3.7.2" />
 </widget>
