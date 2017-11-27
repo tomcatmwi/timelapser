@@ -239,7 +239,11 @@ export class SettingsPage {
                 {
                     text: 'Set',
                     handler: data => {
-                        this.storageService.storage.cameraSettings.quality = Number(data);
+                        var quality = Number(data.quality);
+                        if (isNaN(quality)) quality = 85
+                        else if (quality > 100) quality = 100
+                        else if (quality < 25) quality = 25;
+                        this.storageService.storage.cameraSettings.quality = quality;
                     }
                 }
             ]

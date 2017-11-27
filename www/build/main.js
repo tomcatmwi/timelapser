@@ -537,6 +537,7 @@ var CameraViewPage = (function () {
             }
             _this.fileSystem.saveFile(filename, _this.formatterService.base64toBlob(imageData[0], 'image/jpeg')).subscribe(function (success) {
                 _this.imagesTaken++;
+                _this.fileSystem.getFreeSpace().subscribe(function (result) { return _this.freeSpace = result * 1024; });
                 _this.noPhoto = false;
             }, function (err) {
                 _this.noPhoto = false;
@@ -1095,7 +1096,14 @@ var SettingsPage = (function () {
                 {
                     text: 'Set',
                     handler: function (data) {
-                        _this.storageService.storage.cameraSettings.quality = Number(data);
+                        var quality = Number(data.quality);
+                        if (isNaN(quality))
+                            quality = 85;
+                        else if (quality > 100)
+                            quality = 100;
+                        else if (quality < 25)
+                            quality = 25;
+                        _this.storageService.storage.cameraSettings.quality = quality;
                     }
                 }
             ]

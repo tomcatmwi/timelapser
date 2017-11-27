@@ -309,7 +309,6 @@ export class CameraViewPage {
 
         this.fileSystem.getFreeSpace().subscribe(result => this.freeSpace = result * 1024);
         this.noPhoto = false;
-
     }
 
     takePhoto() {
@@ -333,6 +332,7 @@ export class CameraViewPage {
                 ).subscribe(
                     success => {
                         this.imagesTaken++;
+                        this.fileSystem.getFreeSpace().subscribe(result => this.freeSpace = result * 1024);
                         this.noPhoto = false;
                     },
                     err => {
